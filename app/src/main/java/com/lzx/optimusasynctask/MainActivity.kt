@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
 
             //模拟该任务耗时两秒
             textView.postDelayed({
-                unLockBlock()
+                unLockBlock() //解除阻塞
             }, 2000)
         }
 
