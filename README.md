@@ -8,8 +8,8 @@
 2. 可设置优先级
 3. 使用简单
 
-<a href="art/WechatIMG3.jpeg"><img src="art/WechatIMG3.jpeg" /></a>
-<a href="art/WechatIMG4.jpeg"><img src="art/WechatIMG4.jpeg"/></a>
+<a href="art/WechatIMG3.jpeg"><img src="art/WechatIMG3.jpeg" width="30%"/></a>
+<a href="art/WechatIMG4.jpeg"><img src="art/WechatIMG4.jpeg" width="30%"/></a>
 
 # 介绍
 OptimusAsyncTask 将每个任务抽象成 OptimusTask，OptimusTask 可以设置任务执行时间，任务优先级，获取任务状态等。
