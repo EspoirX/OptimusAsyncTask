@@ -5,7 +5,7 @@ import java.util.concurrent.PriorityBlockingQueue
 /**
  * 基础任务类
  */
-class BaseOptimusTask : OptimusTask {
+open class BaseOptimusTask : OptimusTask {
 
     //默认优先级
     private var mTaskPriority = TaskPriority.DEFAULT

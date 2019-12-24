@@ -3,7 +3,7 @@ package com.lzx.optimustask
 /**
  * 任务管理类
  */
-class OptimusTaskManager constructor(startInit: Boolean) {
+class OptimusTaskManager constructor(startInit: Boolean = true) {
 
     private val taskQueue = BlockTaskQueue()
 

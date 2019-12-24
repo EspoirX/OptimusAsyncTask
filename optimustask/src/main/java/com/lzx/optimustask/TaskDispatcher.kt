@@ -26,15 +26,7 @@ class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
                         doEvent.setEventType(TaskEvent.EventType.DO)
                         handler.obtainMessage(0x1000, doEvent).sendToTarget()
 
-                        //完成任务
-                        if (task.getDuration() == 0L) {   //如果是没有指定执行时间的任务
-                            task.blockTask()
-                            val finishEvent = TaskEvent()
-                            finishEvent.setTask(task)
-                            finishEvent.setEventType(TaskEvent.EventType.FINISH)
-                            handler.obtainMessage(0x2000, finishEvent).sendToTarget()
-                        } else {
-                            //指定了时间的任务
+                        if (task.getDuration() != 0L) {
                             val finishEvent = TaskEvent()
                             finishEvent.setTask(task)
                             finishEvent.setEventType(TaskEvent.EventType.FINISH)
@@ -42,6 +34,14 @@ class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
                             message.what = 0x2000
                             message.obj = finishEvent
                             handler.sendMessageDelayed(message, task.getDuration())
+                        }
+                        task.blockTask()
+                        //完成任务
+                        if (task.getDuration() == 0L) {
+                            val finishEvent = TaskEvent()
+                            finishEvent.setTask(task)
+                            finishEvent.setEventType(TaskEvent.EventType.FINISH)
+                            handler.obtainMessage(0x3000, finishEvent).sendToTarget()
                         }
                     }
                 }
@@ -61,6 +61,11 @@ class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
                     doTakeList.add(taskEvent.getTask()!!)
                 }
                 0x2000 -> {
+                    taskEvent.getTask()!!.unLockBlock()
+                    taskEvent.getTask()!!.finishTask()
+                    doTakeList.remove(taskEvent.getTask()!!)
+                }
+                0x3000 -> {
                     taskEvent.getTask()!!.finishTask()
                     doTakeList.remove(taskEvent.getTask()!!)
                 }
