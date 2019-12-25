@@ -3,11 +3,14 @@ package com.lzx.optimustask
 /**
  * 任务管理类
  */
-class OptimusTaskManager constructor(startInit: Boolean = true) {
+class OptimusTaskManager constructor(
+    startInit: Boolean = true,
+    stopRunningWhenQueueEmpty: Boolean = false
+) {
 
     private val taskQueue = BlockTaskQueue()
 
-    private var dispatcher: TaskDispatcher = TaskDispatcher(taskQueue)
+    private var dispatcher: TaskDispatcher = TaskDispatcher(taskQueue, stopRunningWhenQueueEmpty)
 
     init {
         if (startInit) {

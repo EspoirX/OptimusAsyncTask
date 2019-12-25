@@ -9,7 +9,10 @@ import androidx.annotation.NonNull
 /**
  * 任务调度器，用来遍历队列
  */
-class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
+class TaskDispatcher constructor(
+    private val taskQueue: BlockTaskQueue,
+    private val stopRunningWhenQueueEmpty: Boolean = false
+) {
     var isRunning = true
     private val doTakeList: MutableList<OptimusTask> = mutableListOf()
 
@@ -62,16 +65,22 @@ class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
                 }
                 0x2000 -> {
                     taskEvent.getTask()!!.unLockBlock()
-                    taskEvent.getTask()!!.finishTask()
-                    doTakeList.remove(taskEvent.getTask()!!)
+                    finishTask(taskEvent)
                 }
                 0x3000 -> {
-                    taskEvent.getTask()!!.finishTask()
-                    doTakeList.remove(taskEvent.getTask()!!)
+                    finishTask(taskEvent)
                 }
                 else -> {
                 }
             }
+        }
+    }
+
+    private fun finishTask(taskEvent: TaskEvent) {
+        taskEvent.getTask()!!.finishTask()
+        doTakeList.remove(taskEvent.getTask()!!)
+        if (stopRunningWhenQueueEmpty && taskQueue.size() == 0) {
+            isRunning = false
         }
     }
 
