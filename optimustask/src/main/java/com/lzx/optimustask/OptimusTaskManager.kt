@@ -27,8 +27,8 @@ class OptimusTaskManager constructor(startInit: Boolean = true) {
         dispatcher.clearAllTask()
     }
 
-    fun clearAllTaskAndFinishTask() {
-        dispatcher.clearAllTaskAndFinishTask()
+    fun clearAndFinishAllTask() {
+        dispatcher.clearAndFinishAllTask()
     }
 
     fun addTask(runNow: Boolean = true, task: OptimusTask) {

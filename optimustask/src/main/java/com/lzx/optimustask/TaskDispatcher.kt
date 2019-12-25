@@ -76,12 +76,14 @@ class TaskDispatcher constructor(private val taskQueue: BlockTaskQueue) {
     }
 
     fun clearAllTask() {
+        isRunning = false
         taskQueue.clear()
         doTakeList.clear()
         handler.removeCallbacksAndMessages(null)
     }
 
-    fun clearAllTaskAndFinishTask() {
+    fun clearAndFinishAllTask() {
+        isRunning = false
         taskQueue.clear()
         for (task in doTakeList) {
             task.finishTask()
