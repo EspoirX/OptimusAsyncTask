@@ -19,6 +19,7 @@ class BlockTaskQueue {
     //阻塞队列
     private val taskQueue: BlockingQueue<OptimusTask> = PriorityBlockingQueue<OptimusTask>()
 
+    var logInft: LogInft? = null
 
     /**
      * 插入时 因为每一个showTask都实现了 comparable 接口 所以队列会按照 showTask 复写的 compare()方法定义的优先级次序进行插入
@@ -31,6 +32,7 @@ class BlockTaskQueue {
             task?.setSequence(atomicInteger.incrementAndGet())
             taskQueue.add(task)
             Log.d(TAG, "\n add task " + task.toString())
+            logInft?.i(TAG, "\n add task " + task.toString())
         }
         return taskQueue.size
     }
@@ -38,6 +40,7 @@ class BlockTaskQueue {
     fun <T : OptimusTask?> remove(task: T) {
         if (taskQueue.contains(task)) {
             Log.d(TAG, "\n" + "task has been finished. remove it from task queue")
+            logInft?.i(TAG, "\n" + "task has been finished. remove it from task queue")
             taskQueue.remove(task)
         }
     }

@@ -1,55 +1,83 @@
 package com.lzx.optimustask
 
-import android.os.AsyncTask
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import androidx.annotation.NonNull
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * 任务调度器，用来遍历队列
  */
 class TaskDispatcher constructor(
-    private val taskQueue: BlockTaskQueue,
-    private val stopRunningWhenQueueEmpty: Boolean = false
+    private var taskQueue: BlockTaskQueue,
+    private var stopRunningWhenQueueEmpty: Boolean = false
 ) {
-    var isRunning = true
+
+    companion object {
+        const val PROGRESS_UPDATE_INTERNAL: Long = 1000
+        const val PROGRESS_UPDATE_INITIAL_INTERVAL: Long = 100
+    }
+
     private val doTakeList: MutableList<OptimusTask> = mutableListOf()
+    var logInft: LogInft? = null
 
-    fun start() {
-        AsyncTask.THREAD_POOL_EXECUTOR.execute {
-            try {
-                while (isRunning) {
-                    //获取任务
-                    val task = taskQueue.take()
-                    task?.let {
-                        //执行任务
-                        val doEvent = TaskEvent()
-                        doEvent.setTask(task)
-                        doEvent.setEventType(TaskEvent.EventType.DO)
-                        handler.obtainMessage(0x1000, doEvent).sendToTarget()
+    private val mExecutorService: ScheduledExecutorService =
+        Executors.newSingleThreadScheduledExecutor()
+    private var mScheduleFuture: ScheduledFuture<*>? = null
 
-                        if (task.getDuration() != 0L) {
-                            val finishEvent = TaskEvent()
-                            finishEvent.setTask(task)
-                            finishEvent.setEventType(TaskEvent.EventType.FINISH)
-                            val message = Message.obtain()
-                            message.what = 0x2000
-                            message.obj = finishEvent
-                            handler.sendMessageDelayed(message, task.getDuration())
-                        }
-                        task.blockTask()
-                        //完成任务
-                        if (task.getDuration() == 0L) {
-                            val finishEvent = TaskEvent()
-                            finishEvent.setTask(task)
-                            finishEvent.setEventType(TaskEvent.EventType.FINISH)
-                            handler.obtainMessage(0x3000, finishEvent).sendToTarget()
-                        }
-                    }
-                }
-            } catch (ex: Exception) {
-                ex.printStackTrace()
+    fun startToPoll() {
+        stopToPoll()
+        if (!mExecutorService.isShutdown) {
+            mScheduleFuture = mExecutorService.scheduleAtFixedRate({
+                pollTask.run()
+            },
+                PROGRESS_UPDATE_INITIAL_INTERVAL,
+                PROGRESS_UPDATE_INTERNAL,
+                TimeUnit.MILLISECONDS)
+        }
+    }
+
+    fun stopToPoll() {
+        mScheduleFuture?.cancel(false)
+    }
+
+    fun isShutdown(): Boolean = mExecutorService.isShutdown
+
+    private fun clearPoll() {
+        stopToPoll()
+        mExecutorService.shutdown()
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    private val pollTask: Runnable = Runnable {
+        val task = taskQueue.take()
+        task?.let {
+            //执行任务
+            val doEvent = TaskEvent()
+            doEvent.setTask(task)
+            doEvent.setEventType(TaskEvent.EventType.DO)
+            handler.obtainMessage(0x1000, doEvent).sendToTarget()
+
+            if (task.getDuration() != 0L) {
+                val finishEvent = TaskEvent()
+                finishEvent.setTask(task)
+                finishEvent.setEventType(TaskEvent.EventType.FINISH)
+                val message = Message.obtain()
+                message.what = 0x2000
+                message.obj = finishEvent
+                handler.sendMessageDelayed(message, task.getDuration())
+            }
+            task.blockTask()
+            //完成任务
+            if (task.getDuration() == 0L) {
+                val finishEvent = TaskEvent()
+                finishEvent.setTask(task)
+                finishEvent.setEventType(TaskEvent.EventType.FINISH)
+                handler.obtainMessage(0x3000, finishEvent).sendToTarget()
             }
         }
     }
@@ -60,10 +88,12 @@ class TaskDispatcher constructor(
             val taskEvent = msg.obj as TaskEvent
             when (msg.what) {
                 0x1000 -> {
+                    logInft?.i("TaskDispatcher", "-------doTask---------")
                     taskEvent.getTask()!!.doTask()
                     doTakeList.add(taskEvent.getTask()!!)
                 }
                 0x2000 -> {
+                    logInft?.i("TaskDispatcher", "-------finishTask---------")
                     taskEvent.getTask()!!.unLockBlock()
                     finishTask(taskEvent)
                 }
@@ -80,24 +110,22 @@ class TaskDispatcher constructor(
         taskEvent.getTask()!!.finishTask()
         doTakeList.remove(taskEvent.getTask()!!)
         if (stopRunningWhenQueueEmpty && taskQueue.size() == 0) {
-            isRunning = false
+            clearPoll()
         }
     }
 
     fun clearAllTask() {
-        isRunning = false
         taskQueue.clear()
         doTakeList.clear()
         handler.removeCallbacksAndMessages(null)
     }
 
     fun clearAndFinishAllTask() {
-        isRunning = false
         taskQueue.clear()
         for (task in doTakeList) {
             task.finishTask()
         }
         doTakeList.clear()
-        handler.removeCallbacksAndMessages(null)
+        clearPoll()
     }
 }

@@ -4,8 +4,7 @@ package com.lzx.optimustask
  * 任务管理类
  */
 class OptimusTaskManager constructor(
-    startInit: Boolean = true,
-    stopRunningWhenQueueEmpty: Boolean = false
+    private val startInit: Boolean = true, stopRunningWhenQueueEmpty: Boolean = false
 ) {
 
     private val taskQueue = BlockTaskQueue()
@@ -14,16 +13,23 @@ class OptimusTaskManager constructor(
 
     init {
         if (startInit) {
-            startRunning()
+            startToPoll()
         }
     }
 
-    fun startRunning() {
-        dispatcher.start()
+    var logInft: LogInft? = null
+        set(value) {
+            field = value
+            taskQueue.logInft = value
+            dispatcher.logInft = value
+        }
+
+    fun startToPoll() {
+        dispatcher.startToPoll()
     }
 
     fun stopRunning() {
-        dispatcher.isRunning = false
+        dispatcher.stopToPoll()
     }
 
     fun clearAllTask() {
@@ -35,8 +41,11 @@ class OptimusTaskManager constructor(
     }
 
     fun addTask(runNow: Boolean = true, task: OptimusTask) {
-        if (runNow && !dispatcher.isRunning) {
-            dispatcher.isRunning = true
+        logInft?.i("OptimusTaskManager", "addTask#isShutdown = " + dispatcher.isShutdown())
+        if (runNow) {
+            if (startInit && !dispatcher.isShutdown()) {
+                startToPoll()
+            }
         }
         taskQueue.add(task)
     }

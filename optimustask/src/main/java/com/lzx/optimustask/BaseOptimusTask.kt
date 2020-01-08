@@ -7,6 +7,10 @@ import java.util.concurrent.PriorityBlockingQueue
  */
 open class BaseOptimusTask : OptimusTask {
 
+    override fun getTaskType(): String {
+        return ""
+    }
+
     //默认优先级
     private var mTaskPriority = TaskPriority.DEFAULT
 

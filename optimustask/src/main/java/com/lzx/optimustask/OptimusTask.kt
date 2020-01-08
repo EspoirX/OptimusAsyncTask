@@ -5,6 +5,11 @@ package com.lzx.optimustask
  */
 interface OptimusTask : Comparable<OptimusTask> {
     /**
+     * 任务的类型
+     */
+    fun getTaskType(): String
+
+    /**
      * 执行任务回调
      */
     fun doTask()
