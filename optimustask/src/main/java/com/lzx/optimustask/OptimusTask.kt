@@ -12,12 +12,12 @@ interface OptimusTask : Comparable<OptimusTask> {
     /**
      * 执行任务回调
      */
-    fun doTask()
+    fun doTask(taskGroup: String)
 
     /**
      * 完成任务回调
      */
-    fun finishTask()
+    fun finishTask(taskGroup: String)
 
     /**
      * 设置优先级

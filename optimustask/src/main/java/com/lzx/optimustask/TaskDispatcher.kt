@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
  * 任务调度器，用来遍历队列
  */
 class TaskDispatcher constructor(
+    private var taskGroup: String,
     private var taskQueue: BlockTaskQueue,
     private var stopRunningWhenQueueEmpty: Boolean = false
 ) {
@@ -22,7 +23,7 @@ class TaskDispatcher constructor(
         const val PROGRESS_UPDATE_INITIAL_INTERVAL: Long = 100
     }
 
-    private val doTakeList: MutableList<OptimusTask> = mutableListOf()
+    private val doTakeList: MutableList<OptimusTask?> = mutableListOf()
     var logInft: LogInft? = null
 
     private val mExecutorService: ScheduledExecutorService =
@@ -32,12 +33,14 @@ class TaskDispatcher constructor(
     fun startToPoll() {
         stopToPoll()
         if (!mExecutorService.isShutdown) {
-            mScheduleFuture = mExecutorService.scheduleAtFixedRate({
-                pollTask.run()
-            },
+            mScheduleFuture = mExecutorService.scheduleAtFixedRate(
+                {
+                    pollTask.run()
+                },
                 PROGRESS_UPDATE_INITIAL_INTERVAL,
                 PROGRESS_UPDATE_INTERNAL,
-                TimeUnit.MILLISECONDS)
+                TimeUnit.MILLISECONDS
+            )
         }
     }
 
@@ -89,12 +92,12 @@ class TaskDispatcher constructor(
             when (msg.what) {
                 0x1000 -> {
                     logInft?.i("TaskDispatcher", "-------doTask---------")
-                    taskEvent.getTask()!!.doTask()
-                    doTakeList.add(taskEvent.getTask()!!)
+                    taskEvent.getTask()?.doTask(taskGroup)
+                    doTakeList.add(taskEvent.getTask())
                 }
                 0x2000 -> {
                     logInft?.i("TaskDispatcher", "-------finishTask---------")
-                    taskEvent.getTask()!!.unLockBlock()
+                    taskEvent.getTask()?.unLockBlock()
                     finishTask(taskEvent)
                 }
                 0x3000 -> {
@@ -107,8 +110,8 @@ class TaskDispatcher constructor(
     }
 
     private fun finishTask(taskEvent: TaskEvent) {
-        taskEvent.getTask()!!.finishTask()
-        doTakeList.remove(taskEvent.getTask()!!)
+        taskEvent.getTask()?.finishTask(taskGroup)
+        doTakeList.remove(taskEvent.getTask())
         if (stopRunningWhenQueueEmpty && taskQueue.size() == 0) {
             clearPoll()
         }
@@ -123,7 +126,7 @@ class TaskDispatcher constructor(
     fun clearAndFinishAllTask() {
         taskQueue.clear()
         for (task in doTakeList) {
-            task.finishTask()
+            task?.finishTask(taskGroup)
         }
         doTakeList.clear()
         clearPoll()

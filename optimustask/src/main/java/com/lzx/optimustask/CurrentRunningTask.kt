@@ -5,18 +5,24 @@ package com.lzx.optimustask
  */
 object CurrentRunningTask {
 
-    private var sCurrentTask: OptimusTask? = null
+    /**
+     * 考虑到可能有多个 OptimusTaskManager 实例，所以当前 OptimusTask 用 map 保存
+     */
+    private var currTaskMap = hashMapOf<String, OptimusTask?>()
 
-    var currentTask: OptimusTask?
-        get() = sCurrentTask
-        set(sCurrentTask) {
-            CurrentRunningTask.sCurrentTask = sCurrentTask
-        }
+    fun getCurrentTask(group: String): OptimusTask? = currTaskMap[group]
 
-    fun removeCurrentTask() {
-        sCurrentTask = null
+    fun setCurrentTask(group: String, task: OptimusTask?) {
+        currTaskMap[group] = task
     }
 
-    val currentTaskStatus: Boolean
-        get() = sCurrentTask != null && sCurrentTask!!.getStatus()
+    fun removeCurrentTask(group: String) {
+        currTaskMap.remove(group)
+    }
+
+    fun clear() {
+        currTaskMap.clear()
+    }
+
+    fun getCurrentTaskStatus(group: String): Boolean = getCurrentTask(group)?.getStatus() ?: false
 }

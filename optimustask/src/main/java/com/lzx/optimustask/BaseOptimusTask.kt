@@ -26,15 +26,14 @@ open class BaseOptimusTask : OptimusTask {
     //此队列用来实现任务时间不确定的队列阻塞功能
     private val blockQueue = PriorityBlockingQueue<Int>()
 
-
-    override fun doTask() {
+    override fun doTask(taskGroup: String) {
         mTaskStatus = true
-        CurrentRunningTask.currentTask = this
+        CurrentRunningTask.setCurrentTask(taskGroup, this)
     }
 
-    override fun finishTask() {
+    override fun finishTask(taskGroup: String) {
         mTaskStatus = false
-        CurrentRunningTask.removeCurrentTask()
+        CurrentRunningTask.removeCurrentTask(taskGroup)
     }
 
     override fun setPriority(mTaskPriority: TaskPriority): OptimusTask {
