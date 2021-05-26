@@ -3,7 +3,7 @@
 
 适合于排队执行的任务实现，比如直播间动画排队播放。
 
-#导入
+# 导入
 ```gradle
 allprojects {
   repositories {
