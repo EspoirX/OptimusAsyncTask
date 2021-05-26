@@ -3,6 +3,22 @@
 
 适合于排队执行的任务实现，比如直播间动画排队播放。
 
+#导入
+```gradle
+allprojects {
+  repositories {
+   ...
+   maven { url 'https://jitpack.io' }
+  }
+}
+
+dependencies {
+    implementation 'com.github.EspoirX:OptimusAsyncTask:v1.1'
+}
+```
+[![](https://jitpack.io/v/EspoirX/OptimusAsyncTask.svg)](https://jitpack.io/#EspoirX/OptimusAsyncTask)
+
+
 # 特点：
 1. 基于 PriorityBlockingQueue 实现
 2. 可设置优先级
