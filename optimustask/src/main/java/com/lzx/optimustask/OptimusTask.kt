@@ -1,64 +1,67 @@
 package com.lzx.optimustask
 
-/**
- * 任务接口
- */
-interface OptimusTask : Comparable<OptimusTask> {
-    /**
-     * 任务的类型
-     */
-    fun getTaskType(): String
+import java.util.concurrent.PriorityBlockingQueue
+
+abstract class OptimusTask : IOptimusTask {
+
+    private var taskName = ""
+
+    init {
+        val clazzName = javaClass.canonicalName
+        val cacheList = OptimusTaskManager.cacheTaskNameList
+        val name = clazzName + "_" + cacheList.size
+        if (!cacheList.contains(name)) {
+            cacheList.add(name)
+        }
+        taskName = name
+    }
 
     /**
-     * 执行任务回调
+     * 默认名称由类名+数字组成，保证不重复
      */
-    fun doTask(taskGroup: String)
+    override fun getTaskName(): String {
+        return taskName
+    }
 
-    /**
-     * 完成任务回调
-     */
-    fun finishTask(taskGroup: String)
+    //默认优先级
+    private var taskPriority = TaskPriority.DEFAULT
 
-    /**
-     * 设置优先级
-     */
-    fun setPriority(mTaskPriority: TaskPriority): OptimusTask
+    // 入队次序
+    private var mSequence = 0
+    private var deferred: PriorityBlockingQueue<Int>? = null
 
-    /**
-     * 获取优先级
-     */
-    fun getPriority(): TaskPriority
+    override fun getDuration(): Long = 0
 
-    /**
-     * 当优先级相同 按照插入顺序 先入先出 该方法用来标记插入顺序
-     */
-    fun setSequence(mSequence: Int)
+    override fun setPriority(taskPriority: TaskPriority) {
+        this.taskPriority = taskPriority
+    }
 
-    /**
-     * 获取入队次序
-     */
-    fun getSequence(): Int
+    override fun getPriority(): TaskPriority {
+        return taskPriority
+    }
 
-    /**
-     * 状态
-     */
-    fun getStatus(): Boolean
+    override fun setSequence(sequence: Int) {
+        this.mSequence = sequence
+    }
 
-    /**
-     * 每个任务执行的时间
-     */
-    fun getDuration(): Long
+    override fun getSequence(): Int {
+        return mSequence
+    }
 
-    /**
-     * 阻塞执行队列
-     */
-    @Throws(Exception::class)
-    fun blockTask()
+    override fun doNextTask() {
+        finishTask()
+        OptimusTaskManager.currRunningTask = null
+        deferred?.add(1)
+        deferred = null
+    }
 
-    /**
-     * 解除执行队列的阻塞
-     */
-    fun unLockBlock()
+    override fun setDeferred(deferred: PriorityBlockingQueue<Int>) {
+        this.deferred = deferred
+    }
 
-    fun clearBlock()
+    override fun compareTo(other: IOptimusTask): Int {
+        val me = getPriority()
+        val it: TaskPriority = other.getPriority()
+        return if (me === it) getSequence() - other.getSequence() else it.ordinal - me.ordinal
+    }
 }

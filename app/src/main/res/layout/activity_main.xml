@@ -76,56 +76,27 @@
                 android:layout_height="wrap_content"
                 android:text="1、添加执行时间不确定的任务并立即执行" />
 
+
             <Button
                 android:id="@+id/btn2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/btn1"
-                android:text="2、添加执行时间不确定的任务(可连续添加)" />
+                android:text="3、添加执行时间确定的任务并立即执行" />
 
-            <Button
-                android:id="@+id/btn2Start"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn1"
-                android:layout_toRightOf="@+id/btn2"
-                android:text="开始" />
 
             <Button
                 android:id="@+id/btn3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/btn2"
-                android:text="3、添加执行时间确定的任务并立即执行" />
+                android:text="插入优先级高的任务到 1" />
 
             <Button
                 android:id="@+id/btn4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/btn3"
-                android:text="4、添加执行时间确定的任务(可连续添加)" />
-
-            <Button
-                android:id="@+id/btn4Start"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn3"
-                android:layout_toRightOf="@+id/btn4"
-                android:text="开始" />
-
-            <Button
-                android:id="@+id/btn5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn4"
-                android:text="插入优先级高的任务到 1" />
-
-
-            <Button
-                android:id="@+id/btn9"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn5"
                 android:text="多个任务一起执行" />
         </RelativeLayout>
 
