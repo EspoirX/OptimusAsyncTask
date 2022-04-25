@@ -130,8 +130,8 @@ class OptimusTaskManager {
     fun clear() {
         runCatching {
             deferred.add(1)
-            scope.launch(handler) { channel.consumeEach { it.finishTask() } }
             channel.close()
+            currRunningTask?.finishTask()
             cacheTaskNameList.clear()
             TaskQueueManager.clearTaskQueue()
             currRunningTask = null
