@@ -1,5 +1,5 @@
 # OptimusAsyncTask
-基于 PriorityBlockingQueue 的优先级异步任务队列
+基于 kotlin Channel 的优先级异步任务队列
 
 适合于排队执行的任务实现，比如直播间动画排队播放。
 
