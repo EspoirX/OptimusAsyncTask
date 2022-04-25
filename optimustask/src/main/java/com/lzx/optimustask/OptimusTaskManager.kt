@@ -93,9 +93,7 @@ class OptimusTaskManager {
     private suspend fun reSendTaskIfNeed() {
         if (TaskQueueManager.getTaskQueueSize() > 0) {
             val list = mutableListOf<IOptimusTask>()
-            TaskQueueManager.getTaskQueue().forEach {
-                list.add(it)
-            }
+            TaskQueueManager.getTaskQueue().forEach { list.add(it) }
             TaskQueueManager.clearTaskQueue()
             list.forEach { sendTask(it) }
         }
@@ -104,14 +102,10 @@ class OptimusTaskManager {
     private suspend fun tryToHandlerTask(it: IOptimusTask) {
         try {
             currRunningTask = it
-            withContext(Dispatchers.Main) {
-                it.doTask()
-            }
+            withContext(Dispatchers.Main) { it.doTask() }
             if (it.getDuration() != 0L) {
                 delay(it.getDuration())
-                withContext(Dispatchers.Main) {
-                    it.finishTask()
-                }
+                withContext(Dispatchers.Main) { it.finishTask() }
                 currRunningTask = null
             } else {
                 deferred.take()
@@ -132,4 +126,15 @@ class OptimusTaskManager {
         return !channel.isClosedForReceive && !channel.isClosedForSend
     }
 
+
+    fun clear() {
+        runCatching {
+            deferred.add(1)
+            scope.launch(handler) { channel.consumeEach { it.finishTask() } }
+            channel.close()
+            cacheTaskNameList.clear()
+            TaskQueueManager.clearTaskQueue()
+            currRunningTask = null
+        }
+    }
 }
