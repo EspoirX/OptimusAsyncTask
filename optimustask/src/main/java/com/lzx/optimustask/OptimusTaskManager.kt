@@ -54,14 +54,10 @@ class OptimusTaskManager {
     private suspend fun sendTask(task: IOptimusTask): Boolean {
         return runCatching {
             if (checkChannelActive()) {
-                return if (!TaskQueueManager.hasTask(task)) {
-                    task.setSequence(atomicInteger.incrementAndGet())
-                    TaskQueueManager.addTask(task)
-                    channel.send(task)
-                    true
-                } else {
-                    false
-                }
+                task.setSequence(atomicInteger.incrementAndGet())
+                TaskQueueManager.addTask(task)
+                channel.send(task)
+                return true
             } else {
                 TaskQueueManager.removeTask(task)
                 cacheTaskNameList.remove(task.getTaskName())
