@@ -10,13 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger
 class OptimusTaskManager {
 
     companion object {
-        private const val TAG = "OptimusTaskManager"
+        const val TAG = "OptimusTaskManager"
         internal val cacheTaskNameList = mutableListOf<String>()
 
         var currRunningTask: IOptimusTask? = null
-
-        @JvmStatic
-        fun getRunningTask() = currRunningTask
     }
 
     private var channel = Channel<IOptimusTask>(Channel.UNLIMITED)
@@ -34,13 +31,15 @@ class OptimusTaskManager {
         loop()
     }
 
+    fun getRunningTask() = currRunningTask
+
     fun addTask(task: IOptimusTask) {
         scope.launch(handler) { addTaskSuspend(task) }
     }
 
-
     private suspend fun addTaskSuspend(task: IOptimusTask) {
         task.setDeferred(deferred)
+        Log.i(TAG, "addTask name = " + task.getTaskName())
         val result = if (checkChannelActive()) {
             sendTask(task)
         } else {
@@ -48,17 +47,31 @@ class OptimusTaskManager {
             reSendTaskIfNeed() //重新发送缓存任务
             sendTask(task)     //最后发送当前任务
         }
-        Log.i(TAG, "addTask name = " + task.getTaskName() + " result = " + result)
     }
 
     private suspend fun sendTask(task: IOptimusTask): Boolean {
         return runCatching {
             if (checkChannelActive()) {
+//                return if (!TaskQueueManager.hasTask(task)) {
+//                    task.setSequence(atomicInteger.incrementAndGet())
+//                    TaskQueueManager.addTask(task)
+//                    channel.send(task)
+//                    Log.i(TAG, "send task -> ${task.getTaskName()}")
+//                    true
+//                } else {
+//                    Log.i(
+//                        TAG, "TaskQueueManager has same task -> ${task.getTaskName()} , " +
+//                            "size = " + TaskQueueManager.getTaskQueue().size
+//                    )
+//                    false
+//                }
                 task.setSequence(atomicInteger.incrementAndGet())
                 TaskQueueManager.addTask(task)
                 channel.send(task)
-                return true
+                Log.i(TAG, "send task -> ${task.getTaskName()}")
+                true
             } else {
+                Log.i(TAG, "Channel is not Active，removeTask -> ${task.getTaskName()}")
                 TaskQueueManager.removeTask(task)
                 cacheTaskNameList.remove(task.getTaskName())
                 return false
@@ -87,31 +100,35 @@ class OptimusTaskManager {
     }
 
     private suspend fun reSendTaskIfNeed() {
-        if (TaskQueueManager.getTaskQueueSize() > 0) {
-            val list = mutableListOf<IOptimusTask>()
-            TaskQueueManager.getTaskQueue().forEach { list.add(it) }
-            TaskQueueManager.clearTaskQueue()
-            list.forEach { sendTask(it) }
+        runCatching {
+            if (TaskQueueManager.getTaskQueueSize() > 0) {
+                val list = Collections.synchronizedList(mutableListOf<IOptimusTask>())
+                TaskQueueManager.getTaskQueue().forEach { list.add(it) }
+                TaskQueueManager.clearTaskQueue()
+                list.forEach { sendTask(it) }
+            }
         }
     }
 
     private suspend fun tryToHandlerTask(it: IOptimusTask) {
         try {
+            Log.i(TAG, "tryToHandlerTask -> ${it.getTaskName()}")
             currRunningTask = it
             withContext(Dispatchers.Main) { it.doTask() }
             if (it.getDuration() != 0L) {
                 delay(it.getDuration())
                 withContext(Dispatchers.Main) { it.finishTask() }
                 currRunningTask = null
+
+                Log.i(TAG, "tryToHandlerTask finish，removeTask -> ${it.getTaskName()}")
+                TaskQueueManager.removeTask(it)
+                cacheTaskNameList.remove(it.getTaskName())
             } else {
                 deferred.take()
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
             Log.i(TAG, "handlerTaskCatch -> $ex")
-        } finally {
-            TaskQueueManager.removeTask(it)
-            cacheTaskNameList.remove(it.getTaskName())
         }
     }
 
