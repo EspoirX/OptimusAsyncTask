@@ -51,6 +51,9 @@ abstract class OptimusTask : IOptimusTask {
     override fun doNextTask() {
         finishTask()
         OptimusTaskManager.currRunningTask = null
+        Log.i(OptimusTaskManager.TAG, "tryToHandlerTask finish，removeTask -> ${getTaskName()}")
+        TaskQueueManager.removeTask(this)
+        OptimusTaskManager.cacheTaskNameList.remove(getTaskName())
         deferred?.add(1)
         deferred = null
     }
@@ -64,4 +67,5 @@ abstract class OptimusTask : IOptimusTask {
         val it: TaskPriority = other.getPriority()
         return if (me === it) getSequence() - other.getSequence() else it.ordinal - me.ordinal
     }
+
 }
