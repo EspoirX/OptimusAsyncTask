@@ -13,7 +13,7 @@ allprojects {
 }
 
 dependencies {
-    implementation 'com.github.EspoirX:OptimusAsyncTask:v1.2'
+    implementation 'com.github.EspoirX:OptimusAsyncTask:v1.5'
 }
 ```
 [![](https://jitpack.io/v/EspoirX/OptimusAsyncTask.svg)](https://jitpack.io/#EspoirX/OptimusAsyncTask)
