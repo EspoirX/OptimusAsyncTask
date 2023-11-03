@@ -1,4 +1,4 @@
-package com.lzx.optimustask
+package com.espoir.optimustask
 
 /**
  * 队列管理
